@@ -1,8 +1,25 @@
 [package]
-name = "postgres_money"
-version = "0.1.0"
 authors = ["Thomas Brigham <thomas@thomasbrigham.me>"]
+categories = [
+    "data-structures",
+    "parser-implementations"
+]
+description = "A library to generate and parse money types."
+#TODO
+documentation = "www.google.com"
 edition = "2018"
+keywords = [
+    "money",
+    "currency",
+    "cash"
+]
+license = "Apache-2.0 OR MIT"
+homepage = "https://github.com/tkbrigham/postgres_money"
+name = "postgres_money"
+#TODO
+readme = "README.md"
+repository = "https://github.com/tkbrigham/postgres_money"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
