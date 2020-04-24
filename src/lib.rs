@@ -1,20 +1,24 @@
 use std::{fmt, str};
+use std::num::ParseIntError;
+
 mod parser;
 
-// TODO: should this be [u8; 8] instead?
-pub type Bytes = i64;
+// TODO: should this be [u8; 8], and called Bytes, instead?
+pub type Inner = i64;
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Money(Bytes);
+pub struct Money(Inner);
 
 impl Money {
-    /// Returns an array of 8 octets containing the Money data.
-    pub const fn as_bytes(&self) -> &Bytes {
-        &self.0
+    pub const MIN_INNER: Inner = -9223372036854775808;
+    pub const MAX_INNER: Inner = 9223372036854775807;
+
+    pub const fn min() -> Money  {
+        Money(Money::MIN_INNER)
     }
 
-    pub const fn from_bytes(bytes: Bytes) -> Money {
-        Money(bytes)
+    pub const fn max() -> Money  {
+        Money(Money::MAX_INNER)
     }
 
     pub const fn none() -> Money {
@@ -35,11 +39,13 @@ impl fmt::Display for Money {
     }
 }
 
-// impl str::FromStr for Money {
-//     fn from_str(money_str: &str) -> Result<Self, Self::Err> {
-//         Money::parse_str(money_str)
-//     }
-// }
+impl str::FromStr for Money {
+    type Err = ParseIntError;
+
+    fn from_str(money_str: &str) -> Result<Self, Self::Err> {
+        Money::parse_str(money_str)
+    }
+}
 
 impl Default for Money {
     #[inline]
@@ -70,6 +76,17 @@ mod tests {
 
     #[test]
     fn test_playground() {
+        let test = "14599999";
+        let len = test.len() as u32;
+        println!("{}", 1459 / 1000);
+
+        let s = "-10000.32";
+        println!("{:?}", s.split("-"));
+
+        let v: Vec<&str> = s.split(|c: char| !c.is_numeric()).collect();
+        println!("{:?}", v);
+
+        assert_eq!(14599999 / 10_i32.pow(len - 2), 14);
         // assert_eq!(9223372036854775807 as f32, 92233720368547758.07)
     }
 }
