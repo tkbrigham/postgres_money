@@ -1,4 +1,4 @@
-use regex::Regex;
+use regex::{Regex, Match};
 
 pub mod error;
 pub use self::error::Error;
@@ -6,30 +6,18 @@ pub use self::error::Error;
 use crate::Money;
 
 fn parse_en_us_utf8(input: &str) -> Result<Money, Error> {
-    money_str_to_int(input).map(Money)
+    Amount::from(input)?.to_money()
 }
-
-// fn convert_to_cents(input: &str) -> Result<Inner, Error> {
-//     let (dollars, cents): (i64, i64) = input
-//         .replace("$", "")
-//
-//         .split(".")
-// }
-//
-// fn extract_amount(input: &str) -> Amount {
-// }
 
 impl Money {
     pub fn parse_str(input: &str) -> Result<Money, Error> {
-        parse_en_us_utf8(&input.replace("$", ""))
+        parse_en_us_utf8(input)
     }
 
     // TODO
     // pub fn parse_int<T>(input: T) -> Result<Money, Error> {
     // }
 }
-
-type Inner = String;
 
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd, Debug)]
 enum AmountKind {
@@ -40,31 +28,41 @@ enum AmountKind {
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd, Debug)]
 struct Amount {
     kind: AmountKind,
-    inner: Inner
+    dollars: String,
+    cents: String,
 }
 
 impl Amount {
     fn new(kind: AmountKind, inner: &str) -> Result<Self, Error> {
-        return if Self::valid_inner().is_match(inner) {
-            Ok(Amount {
-                kind,
-                inner: inner.to_string()
-            })
-        } else {
-            Err(Error::InvalidString)
+        let caps = Self::valid_inner()
+            .captures(inner)
+            .ok_or(Error::InvalidString)?;
+
+        if caps.len() != 3 {
+            return Err(Error::InvalidString)
         }
+
+        Ok(Amount {
+            kind,
+            dollars: Self::mk_string(caps.get(1)),
+            cents: Self::mk_string(caps.get(2)),
+        })
     }
 
-    pub fn positive(s: &str) -> Result<Amount, Error> {
+    fn positive(s: &str) -> Result<Amount, Error> {
         Self::new(AmountKind::Positive, s)
     }
 
-    pub fn negative(s: &str) -> Result<Amount, Error> {
+    fn negative(s: &str) -> Result<Amount, Error> {
         Self::new(AmountKind::Negative, s)
     }
 
     fn valid_inner() -> Regex {
         Regex::new(r"^\$?(?P<dollars>\d*)\.?(?P<cents>\d*$)").unwrap()
+    }
+
+    fn mk_string(m: Option<Match>) -> String {
+        m.map_or("", |m| m.as_str()).to_string()
     }
 
     fn from(s: &str) -> Result<Self, Error> {
@@ -86,32 +84,35 @@ impl Amount {
         }
     }
 
-    // fn to_money(self) -> Money {
-    //
-    // }
+    fn to_money(&self) -> Result<Money, Error> {
+        let inner = self.combine_dollars_and_cents()?;
+        Ok(Money(inner))
+    }
 
-    // fn combine_dollars_and_cents(&self) -> i64 {
-    //
-    // }
+    fn combine_dollars_and_cents(&self) -> Result<i64, Error> {
+        let dollars = mk_int(&self.dollars)?;
+        let cents = mk_rounded_cents(&self.cents)?;
 
-    // fn get_parts(self) {
-    //     let caps = Self::valid_inner().captures(self.0).unwrap();
-    //
-    //     let dollars = caps.get(1).map_or("", |m| m.as_str());
-    //     let cents = caps.get(2).map_or("", |m| m.as_str());
-    //
-    //     println!("dollars = {:?}", dollars);
-    //     println!("cents = {:?}", cents);
-    //     // (dollars, cents)
-    // }
+        Ok(dollars * 100 + cents)
+    }
 }
 
-// expects no currency symbols
-fn money_str_to_int(input: &str) -> Result<i64, Error> {
-    let money = Regex::new(r"^(\d*\.?\d*)").unwrap();
-    match money.find(input) {
-        Some(m) => mk_int(&m.as_str().replace(".", "")),
-        None => Err(Error::InvalidString)
+fn mk_rounded_cents(s: &String) -> Result<i64, Error> {
+    return if s.len() > 2 {
+        round_cents(s)
+    } else {
+        mk_int(s)
+    };
+}
+
+fn round_cents(s: &String) -> Result<i64, Error> {
+    let s = &s[..3];
+    let (s1, s2) = s.split_at(s.len() - 1);
+    let (i1, i2) = (mk_int(s1)?, mk_int(s2)?);
+    if i2 >= 5 {
+        Ok(i1 + 1)
+    } else {
+        Ok(i1)
     }
 }
 
@@ -119,72 +120,84 @@ fn mk_int(s: &str) -> Result<i64, Error> {
     str::parse::<i64>(&s).map_err(|_e| Error::ParseInt)
 }
 
-// fn cents_int_for(s: &str) -> i8 {
-//
-// }
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::error::Error::InvalidString;
 
-    #[test]
-    fn test_goof() {
-        let a = Amount::positive("100").unwrap();
-        println!("{}", a.inner);
-    }
-
+    // #[test]
+    // fn test_str_to_round() {
+    //     let s = "145999";
+    //     let ret = mk_rounded_cents(&s.to_string()).expect("oh yeah");
+    //     println!("ret = {}", ret);
+    // }
+    //
     // #[test]
     // fn test_amt_pos() {
-    //     let a = Amount::from("100");
-    //     assert_eq!(a, Ok(Amount::positive("100")));
+    //     let a = Amount::from("100").unwrap();
+    //     assert_eq!(a.kind, AmountKind::Positive);
+    //     assert_eq!(a.dollars, "100");
+    //     assert_eq!(a.cents, "");
     // }
     //
     // #[test]
-    // fn test_amt_pos_2() {
-    //     let a = Amount::from("$100");
-    //     assert_eq!(a, Ok(Amount::positive("$100")));
+    // fn test_amt_neg() {
+    //     let a = Amount::from("-100").unwrap();
+    //     assert_eq!(a.kind, AmountKind::Negative);
+    //     assert_eq!(a.dollars, "100");
+    //     assert_eq!(a.cents, "");
     // }
     //
     // #[test]
-    // fn test_amt_invalid() {
-    //     let a = Amount::from("-($100)");
-    //     assert!(a.is_err());
+    // fn test_amt_zero() {
+    //     let a = Amount::from("0").unwrap();
+    //     assert_eq!(a.kind, AmountKind::Positive);
+    //     assert_eq!(a.dollars, "0");
+    //     assert_eq!(a.cents, "");
     // }
     //
     // #[test]
-    // fn test_amt_neg_paren() {
-    //     let a = Amount::from("-$100")?;
-    //     assert_eq!(a, Amount::negative("$100"));
+    // fn test_amt_dollars_cents() {
+    //     let a = Amount::from("9.8").unwrap();
+    //     assert_eq!(a.kind, AmountKind::Positive);
+    //     assert_eq!(a.dollars, "9");
+    //     assert_eq!(a.cents, "8");
     // }
     //
     // #[test]
-    // fn test_wacky() {
-    //     let a = Amount::from("-$100-$100");
+    // fn test_amt_dollars_cents_neg() {
+    //     let a = Amount::from("-9.8").unwrap();
+    //     assert_eq!(a.kind, AmountKind::Negative);
+    //     assert_eq!(a.dollars, "9");
+    //     assert_eq!(a.cents, "8");
+    // }
+    //
+    // #[test]
+    // fn test_amt_dollars_cents_neg_unrounded() {
+    //     let a = Amount::from("-9.8023").unwrap();
+    //     assert_eq!(a.kind, AmountKind::Negative);
+    //     assert_eq!(a.dollars, "9");
+    //     assert_eq!(a.cents, "8023");
+    // }
+    //
+    // #[test]
+    // fn test_invalid() {
+    //     let a = Amount::from("-(100)");
+    //     assert_eq!(a, Err(Error::InvalidString));
+    // }
+    //
+    // #[test]
+    // fn test_invalid_garbage() {
+    //     let a = Amount::from("100b");
     //     assert_eq!(a, Err(Error::InvalidString));
     // }
 
-    // #[test]
-    // fn test_amt_neg_minus() {
-    //     let a = Amount::from("($100)");
-    //     assert_eq!(a, Ok(Amount::Negative("100".to_string())));
-    // }
 
-    // #[test]
-    // fn test_neg_parts() {
-    //     let s = "-1000.0";
-    //
-    //     get_parts(s);
-    // }
-    //
-    //
-    // #[test]
-    // fn test_valid_123_45() {
-    //     assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
-    // }
-    //
+    // TODO: actual tests
+    #[test]
+    fn test_valid_123_45() {
+        assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
+    }
+
     // #[test]
     // fn test_valid_123_451() {
     //     assert_eq!(Money::parse_str("$123.451"), Ok(Money(12345)))
