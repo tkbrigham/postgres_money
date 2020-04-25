@@ -5,18 +5,18 @@ pub use self::error::Error;
 
 use crate::Money;
 
-fn parse_en_us_utf8(input: &str) -> Result<Money, Error> {
-    Amount::from(input)?.to_money()
-}
-
 impl Money {
     pub fn parse_str(input: &str) -> Result<Money, Error> {
         parse_en_us_utf8(input)
     }
 
-    // TODO
-    // pub fn parse_int<T>(input: T) -> Result<Money, Error> {
-    // }
+    pub fn parse_int(cents: i64) -> Money {
+        Money(cents)
+    }
+}
+
+fn parse_en_us_utf8(input: &str) -> Result<Money, Error> {
+    Amount::from(input)?.to_money()
 }
 
 #[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd, Debug)]
@@ -146,6 +146,7 @@ fn mk_int(s: &str) -> Result<i64, Error> {
 mod tests {
     use super::*;
 
+    // Money::parse_str
     #[test]
     fn test_valid_123_45() {
         assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
@@ -251,5 +252,42 @@ mod tests {
         assert_eq!(Money::parse_str("92233720368547758.075"), Err(Error::OutOfRange))
     }
 
+    // Money Ops
+
+
     // TODO: int parsing
+    #[test]
+    fn test_valid_123_45_int() {
+        assert_eq!(Money::parse_int(12345), Money(12345))
+    }
+
+    #[test]
+    fn test_valid_123_451_int() {
+        assert_eq!(Money::parse_int(123451), Money(123451))
+    }
+
+    #[test]
+    fn test_valid_123_454_int() {
+        assert_eq!(Money::parse_int(123454), Money(123454))
+    }
+
+    #[test]
+    fn test_valid_1234567890_int() {
+        assert_eq!(Money::parse_int(1234567890), Money(1234567890))
+    }
+
+    #[test]
+    fn test_valid_12345678901234567_int() {
+        assert_eq!(Money::parse_int(12345678901234567), Money(12345678901234567))
+    }
+
+    #[test]
+    fn test_valid_neg_12345678901234567_int() {
+        assert_eq!(Money::parse_int(-12345678901234567), Money(-12345678901234567))
+    }
+
+    #[test]
+    fn test_valid_neg_123456_78_int() {
+        assert_eq!(Money::parse_int(-12345678), Money(-12345678))
+    }
 }
