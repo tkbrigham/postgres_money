@@ -3,19 +3,10 @@ use regex::Regex;
 pub mod error;
 pub use self::error::Error;
 
-use crate::{Money, Inner};
+use crate::Money;
 
 fn parse_en_us_utf8(input: &str) -> Result<Money, Error> {
-    // let (dollars, cents): (i64, i64) = input.replace("$", "")
-    //     .split(".")
-    //     .collect::<Vec<&str>>()
-    //     .map(|section| str::parse::<i64>(section))
-    //     .map_err(|_ignore| return Error::ParseInt)?;
-    //
-    // println!("dollars: {}; cents: {}", dollars, cents);
-    //
-    let inner = 8080;
-    Ok(Money(inner))
+    money_str_to_int(input).map(Money)
 }
 
 // fn convert_to_cents(input: &str) -> Result<Inner, Error> {
@@ -28,15 +19,9 @@ fn parse_en_us_utf8(input: &str) -> Result<Money, Error> {
 // fn extract_amount(input: &str) -> Amount {
 // }
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-enum Amount {
-    Negative(String),
-    Positive(String)
-}
-
 impl Money {
     pub fn parse_str(input: &str) -> Result<Money, Error> {
-        parse_en_us_utf8(input)
+        parse_en_us_utf8(&input.replace("$", ""))
     }
 
     // TODO
@@ -44,12 +29,25 @@ impl Money {
     // }
 }
 
-fn unwrap_minus(input: &str) -> Option<Amount> {
-    let neg = Regex::new(r"^-\$(?P<cash_neg>[\d\.]*)").unwrap();
-    for cap in neg.captures_iter(input) {
-        return Some(Amount::Negative(cap["cash_neg"].to_string()))
+// fn unwrap_minus(input: &str) -> Option<Amount> {
+//     let neg = Regex::new(r"^-\$(?P<cash_neg>[\d\.]*)").unwrap();
+//     for cap in neg.captures_iter(input) {
+//         return Some(Amount::Negative(cap["cash_neg"].to_string()))
+//     }
+//     None
+// }
+
+// expects no currency symbols
+fn money_str_to_int(input: &str) -> Result<i64, Error> {
+    let money = Regex::new(r"^(\d*\.?\d*)").unwrap();
+    match money.find(input) {
+        Some(m) => mk_int(&m.as_str().replace(".", "")),
+        None => Err(Error::InvalidString)
     }
-    None
+}
+
+fn mk_int(s: &str) -> Result<i64, Error> {
+    str::parse::<i64>(&s).map_err(|_e| Error::ParseInt)
 }
 
 // fn unwrap_paren(input: &str) -> Option<Amount> {
@@ -59,64 +57,12 @@ fn unwrap_minus(input: &str) -> Option<Amount> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::error::Error::OutOfRange;
 
     #[test]
-    fn test_unwrap_minus_is_none_when_paren_and_neg() {
-        assert!(unwrap_minus("(-$100.00)").is_none());
+    fn test_valid_123_45() {
+        assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
     }
 
-    #[test]
-    fn test_unwrap_minus_is_none_when_neg_and_paren() {
-        assert!(unwrap_minus("-($100.00)").is_none());
-    }
-
-    #[test]
-    fn test_unwrap_minus_is_none_when_unrecognized_currency() {
-        assert!(unwrap_minus("-¥100.00)").is_none());
-    }
-
-    #[test]
-    fn test_unwrap_minus_unwraps() {
-        let expected = Amount::Negative("100.00".to_string());
-        match unwrap_minus("-$100.00") {
-            Some(negative) => assert_eq!(negative, expected),
-            None => assert!(false, "expected a Some")
-        }
-    }
-
-    #[test]
-    fn test_neg_paren() {
-        let paren = Regex::new(r"^\(\$?(?P<cash_paren>[\d\.]*)\)").unwrap();
-        let caps = paren.captures_iter("(-$100.00)");
-
-        for cap in caps {
-            println!("paren: {:?}", &cap["cash_paren"])
-        }
-    }
-
-    // #[test]
-    // fn test_dummy() {
-    //     // let t = "92233720368547758078";
-    //     // let res= str::parse::<i64>(t);
-    //     // println!("{:?}", res);
-    //
-    //     // let re = Regex::new(r"\(+\$+\d*\.+\d*\)+").unwrap();
-    //     let valid = Regex::new(r"-\(+\$+(\d+)\.+(\d+)\)+").unwrap();
-    //     // let re = Regex::new(r"(\d+)\.+(\d+)").unwrap();
-    //     let caps = valid.captures("($100.00)").unwrap();
-    //     println!("{:?}", caps.get(0).unwrap().as_str());
-    //     println!("{:?}", caps.get(1).unwrap().as_str());
-    //     println!("{:?}", caps.get(2).unwrap().as_str());
-    //     return
-    //     // assert!(str::parse::<i64>(t).is_ok())
-    // }
-
-    // #[test]
-    // fn test_valid_123_45() {
-    //     assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
-    // }
-    //
     // #[test]
     // fn test_valid_123_451() {
     //     assert_eq!(Money::parse_str("$123.451"), Money(12345))
