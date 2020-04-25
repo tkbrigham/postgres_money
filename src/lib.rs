@@ -1,7 +1,7 @@
 use std::{fmt, str};
-use std::num::ParseIntError;
 
 mod parser;
+use parser::Error;
 
 // TODO: should this be [u8; 8], and called Bytes, instead?
 pub type Inner = i64;
@@ -40,7 +40,7 @@ impl fmt::Display for Money {
 }
 
 impl str::FromStr for Money {
-    type Err = ParseIntError;
+    type Err = Error;
 
     fn from_str(money_str: &str) -> Result<Self, Self::Err> {
         Money::parse_str(money_str)
