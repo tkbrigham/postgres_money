@@ -92,8 +92,16 @@ impl Amount {
     fn combine_dollars_and_cents(&self) -> Result<i64, Error> {
         let dollars = mk_int(&self.dollars)?;
         let cents = mk_rounded_cents(&self.cents)?;
+        let tot = dollars.checked_mul(100)
+            .ok_or(Error::OutOfRange)?
+            .checked_add(cents)
+            .ok_or(Error::OutOfRange);
 
-        Ok(dollars * 100 + cents)
+        return if &self.kind == &AmountKind::Negative {
+            tot?.checked_mul(-1).ok_or(Error::OutOfRange)
+        } else {
+            tot
+        };
     }
 }
 
@@ -117,7 +125,18 @@ fn round_cents(s: &String) -> Result<i64, Error> {
 }
 
 fn mk_int(s: &str) -> Result<i64, Error> {
-    str::parse::<i64>(&s).map_err(|_e| Error::ParseInt)
+    if s.is_empty() {
+        return Ok(0)
+    }
+
+    str::parse::<i64>(&s)
+        .map_err(|e| {
+            // This is a janky workaround until ParseIntError.kind() is stable
+            match e.to_string().find("too large") {
+                Some(_) => Error::OutOfRange,
+                None => Error::ParseInt
+            }
+        })
 }
 
 #[cfg(test)]
@@ -191,87 +210,88 @@ mod tests {
     //     assert_eq!(a, Err(Error::InvalidString));
     // }
 
-
     // TODO: actual tests
     #[test]
     fn test_valid_123_45() {
         assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
     }
 
-    // #[test]
-    // fn test_valid_123_451() {
-    //     assert_eq!(Money::parse_str("$123.451"), Ok(Money(12345)))
-    // }
-    //
-    // #[test]
-    // fn test_valid_123_454() {
-    //     assert_eq!(Money::parse_str("$123.454"), Ok(Money(12345)))
-    // }
-    //
-    // #[test]
-    // fn test_valid_123_455() {
-    //     assert_eq!(Money::parse_str("$123.455"), Ok(Money(12346)))
-    // }
-    //
-    // #[test]
-    // fn test_valid_123_456() {
-    //     assert_eq!(Money::parse_str("$123.456"), Ok(Money(12346)))
-    // }
-    //
-    // #[test]
-    // fn test_valid_123_459() {
-    //     assert_eq!(Money::parse_str("$123.459"), Ok(Money(12346)))
-    // }
-    //
-    // #[test]
-    // fn test_valid_1234567890() {
-    //     assert_eq!(Money::parse_str("1234567890"), Ok(Money(123456789000)))
-    // }
-    //
-    // #[test]
-    // fn test_valid_12345678901234567() {
-    //     assert_eq!(Money::parse_str("12345678901234567"), Ok(Money(1234567890123456700)))
-    // }
-    //
-    // #[test]
-    // fn test_invalid_123456789012345678() {
-    //     assert_eq!(Money::parse_str("123456789012345678"), Err(Error::OutOfRange))
-    // }
-    //
-    // #[test]
-    // fn test_invalid_9223372036854775807() {
-    //     assert_eq!(Money::parse_str("9223372036854775807"), Err(Error::OutOfRange))
-    // }
+    #[test]
+    fn test_valid_123_451() {
+        assert_eq!(Money::parse_str("$123.451"), Ok(Money(12345)))
+    }
+
+    #[test]
+    fn test_valid_123_454() {
+        assert_eq!(Money::parse_str("$123.454"), Ok(Money(12345)))
+    }
+
+    #[test]
+    fn test_valid_123_455() {
+        assert_eq!(Money::parse_str("$123.455"), Ok(Money(12346)))
+    }
+
+    #[test]
+    fn test_valid_123_456() {
+        assert_eq!(Money::parse_str("$123.456"), Ok(Money(12346)))
+    }
+
+    #[test]
+    fn test_valid_123_459() {
+        assert_eq!(Money::parse_str("$123.459"), Ok(Money(12346)))
+    }
+
+    #[test]
+    fn test_valid_1234567890() {
+        assert_eq!(Money::parse_str("1234567890"), Ok(Money(123456789000)))
+    }
+
+    #[test]
+    fn test_valid_12345678901234567() {
+        assert_eq!(Money::parse_str("12345678901234567"), Ok(Money(1234567890123456700)))
+    }
+
+    #[test]
+    fn test_invalid_123456789012345678() {
+        assert_eq!(Money::parse_str("123456789012345678"), Err(Error::OutOfRange))
+    }
+
+    #[test]
+    fn test_invalid_9223372036854775807() {
+        assert_eq!(Money::parse_str("9223372036854775807"), Err(Error::OutOfRange))
+    }
+
+    #[test]
+    fn test_valid_neg_12345() {
+        assert_eq!(Money::parse_str("-12345"), Ok(Money(-1234500)))
+    }
+
+    // TKB CURRENT
+    #[test]
+    fn test_valid_neg_1234567890() {
+        assert_eq!(Money::parse_str("-1234567890"), Ok(Money(-123456789000)))
+    }
+
+    #[test]
+    fn test_valid_neg_12345678901234567() {
+        assert_eq!(Money::parse_str("-12345678901234567"), Ok(Money(-1234567890123456700)))
+    }
+
+    #[test]
+    fn test_invalid_neg_123456789012345678() {
+        assert_eq!(Money::parse_str("-123456789012345678"), Err(Error::OutOfRange))
+    }
+
+    #[test]
+    fn test_invalid_neg_9223372036854775808() {
+        assert_eq!(Money::parse_str("-9223372036854775808"), Err(Error::OutOfRange))
+    }
 
     // #[test]
-    // fn test_valid_neg_12345() {
-    //     assert_eq!(Money::parse_str("-12345"), Money(-1234500))
-    // }
-    //
-    // #[test]
-    // fn test_valid_neg_1234567890() {
-    //     assert_eq!(Money::parse_str("-1234567890"), Money(-123456789000))
-    // }
-    //
-    // #[test]
-    // fn test_valid_neg_12345678901234567() {
-    //     assert_eq!(Money::parse_str("-12345678901234567"), Money(-1234567890123456700))
-    // }
-    //
-    // #[test]
-    // fn test_invalid_neg_123456789012345678() {
-    //     assert_eq!(Money::parse_str("-123456789012345678"), Error(OutOfRange))
-    // }
-    //
-    // #[test]
-    // fn test_invalid_neg_9223372036854775808() {
-    //     assert_eq!(Money::parse_str("-9223372036854775808"), Error(OutOfRange))
-    // }
-    //
-    // #[test]
     // fn test_valid_paren_1() {
-    //     assert_eq!(Money::parse_str("(1)"), Money(-100))
+    //     assert_eq!(Money::parse_str("(1)"), Ok(Money(-100)))
     // }
+    //
     //
     // #[test]
     // fn test_valid_paren_123456_78() {
