@@ -3,11 +3,9 @@ use std::{fmt, str};
 mod parser;
 use parser::Error;
 
-// TODO: should this be [u8; 8], and called Bytes, instead?
-pub type Inner = i64;
-
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Money(Inner);
+pub type Inner = i64;
 
 impl Money {
     pub const MIN_INNER: Inner = -9223372036854775808;
@@ -29,13 +27,13 @@ impl Money {
 impl fmt::Debug for Money {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "${}.{}", self.0 / 100, self.0 % 100)
+        write!(f, "${}.{}", self.0 / 100, self.0.abs() % 100)
     }
 }
 
 impl fmt::Display for Money {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "${}.{}", self.0 / 100, self.0 % 100)
+        write!(f, "${}.{}", self.0 / 100, self.0.abs() % 100)
     }
 }
 
@@ -65,28 +63,5 @@ mod tests {
         let nil_uuid = Money::none();
 
         assert_eq!(default_uuid, nil_uuid);
-    }
-
-    #[test]
-    fn test_money_display() {
-        let money = Money(1337);
-        let s = money.to_string();
-        assert_eq!(s, "$13.37");
-    }
-
-    #[test]
-    fn test_playground() {
-        let test = "14599999";
-        let len = test.len() as u32;
-        println!("{}", 1459 / 1000);
-
-        let s = "-10000.32";
-        println!("{:?}", s.split("-"));
-
-        let v: Vec<&str> = s.split(|c: char| !c.is_numeric()).collect();
-        println!("{:?}", v);
-
-        assert_eq!(14599999 / 10_i32.pow(len - 2), 14);
-        // assert_eq!(9223372036854775807 as f32, 92233720368547758.07)
     }
 }

@@ -44,7 +44,7 @@ impl Amount {
 
         Ok(Amount {
             kind,
-            dollars: Self::mk_string(caps.get(1)),
+            dollars: Self::mk_string(caps.get(1)).replace(",", ""),
             cents: Self::mk_string(caps.get(2)),
         })
     }
@@ -58,7 +58,7 @@ impl Amount {
     }
 
     fn valid_inner() -> Regex {
-        Regex::new(r"^\$?(?P<dollars>\d*)\.?(?P<cents>\d*$)").unwrap()
+        Regex::new(r"^\$?(?P<dollars>[\d,]*)\.?(?P<cents>\d*$)").unwrap()
     }
 
     fn mk_string(m: Option<Match>) -> String {
@@ -89,19 +89,22 @@ impl Amount {
         Ok(Money(inner))
     }
 
+    fn apply_sign(&self) -> i64 {
+        return if &self.kind == &AmountKind::Negative {
+            -1
+        } else {
+            1
+        }
+    }
+
     fn combine_dollars_and_cents(&self) -> Result<i64, Error> {
-        let dollars = mk_int(&self.dollars)?;
-        let cents = mk_rounded_cents(&self.cents)?;
-        let tot = dollars.checked_mul(100)
+        let dollars = mk_int(&self.dollars)? * self.apply_sign();
+        let cents = mk_rounded_cents(&self.cents)? * self.apply_sign();
+
+        dollars.checked_mul(100)
             .ok_or(Error::OutOfRange)?
             .checked_add(cents)
-            .ok_or(Error::OutOfRange);
-
-        return if &self.kind == &AmountKind::Negative {
-            tot?.checked_mul(-1).ok_or(Error::OutOfRange)
-        } else {
-            tot
-        };
+            .ok_or(Error::OutOfRange)
     }
 }
 
@@ -143,74 +146,6 @@ fn mk_int(s: &str) -> Result<i64, Error> {
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn test_str_to_round() {
-    //     let s = "145999";
-    //     let ret = mk_rounded_cents(&s.to_string()).expect("oh yeah");
-    //     println!("ret = {}", ret);
-    // }
-    //
-    // #[test]
-    // fn test_amt_pos() {
-    //     let a = Amount::from("100").unwrap();
-    //     assert_eq!(a.kind, AmountKind::Positive);
-    //     assert_eq!(a.dollars, "100");
-    //     assert_eq!(a.cents, "");
-    // }
-    //
-    // #[test]
-    // fn test_amt_neg() {
-    //     let a = Amount::from("-100").unwrap();
-    //     assert_eq!(a.kind, AmountKind::Negative);
-    //     assert_eq!(a.dollars, "100");
-    //     assert_eq!(a.cents, "");
-    // }
-    //
-    // #[test]
-    // fn test_amt_zero() {
-    //     let a = Amount::from("0").unwrap();
-    //     assert_eq!(a.kind, AmountKind::Positive);
-    //     assert_eq!(a.dollars, "0");
-    //     assert_eq!(a.cents, "");
-    // }
-    //
-    // #[test]
-    // fn test_amt_dollars_cents() {
-    //     let a = Amount::from("9.8").unwrap();
-    //     assert_eq!(a.kind, AmountKind::Positive);
-    //     assert_eq!(a.dollars, "9");
-    //     assert_eq!(a.cents, "8");
-    // }
-    //
-    // #[test]
-    // fn test_amt_dollars_cents_neg() {
-    //     let a = Amount::from("-9.8").unwrap();
-    //     assert_eq!(a.kind, AmountKind::Negative);
-    //     assert_eq!(a.dollars, "9");
-    //     assert_eq!(a.cents, "8");
-    // }
-    //
-    // #[test]
-    // fn test_amt_dollars_cents_neg_unrounded() {
-    //     let a = Amount::from("-9.8023").unwrap();
-    //     assert_eq!(a.kind, AmountKind::Negative);
-    //     assert_eq!(a.dollars, "9");
-    //     assert_eq!(a.cents, "8023");
-    // }
-    //
-    // #[test]
-    // fn test_invalid() {
-    //     let a = Amount::from("-(100)");
-    //     assert_eq!(a, Err(Error::InvalidString));
-    // }
-    //
-    // #[test]
-    // fn test_invalid_garbage() {
-    //     let a = Amount::from("100b");
-    //     assert_eq!(a, Err(Error::InvalidString));
-    // }
-
-    // TODO: actual tests
     #[test]
     fn test_valid_123_45() {
         assert_eq!(Money::parse_str("$123.45"), Ok(Money(12345)))
@@ -266,7 +201,6 @@ mod tests {
         assert_eq!(Money::parse_str("-12345"), Ok(Money(-1234500)))
     }
 
-    // TKB CURRENT
     #[test]
     fn test_valid_neg_1234567890() {
         assert_eq!(Money::parse_str("-1234567890"), Ok(Money(-123456789000)))
@@ -287,44 +221,35 @@ mod tests {
         assert_eq!(Money::parse_str("-9223372036854775808"), Err(Error::OutOfRange))
     }
 
-    // #[test]
-    // fn test_valid_paren_1() {
-    //     assert_eq!(Money::parse_str("(1)"), Ok(Money(-100)))
-    // }
-    //
-    //
-    // #[test]
-    // fn test_valid_paren_123456_78() {
-    //     assert_eq!(Money::parse_str("($123,456.78)"), Money(-12345678))
-    // }
-    //
-    // #[test]
-    // fn test_valid_paren_123456_78() {
-    //     assert_eq!(Money::parse_str("($123,456.78)"), Money(-12345678))
-    // }
-    //
-    // #[test]
-    // fn test_valid_min() {
-    //     assert_eq!(Money::parse_str("-92233720368547758.08"), Money::min())
-    // }
-    //
-    // #[test]
-    // fn test_valid_max() {
-    //     assert_eq!(Money::parse_str("92233720368547758.07"), Money::max())
-    // }
-    //
-    // #[test]
-    // fn test_invalid_min() {
-    //     assert_eq!(Money::parse_str("-92233720368547758.085"), Error(OutOfRange))
-    // }
-    //
-    // #[test]
-    // fn test_invalid_max() {
-    //     assert_eq!(Money::parse_str("92233720368547758.075"), Error(OutOfRange))
-    // }
+    #[test]
+    fn test_valid_paren_1() {
+        assert_eq!(Money::parse_str("(1)"), Ok(Money(-100)))
+    }
+
+    #[test]
+    fn test_valid_paren_123456_78() {
+        assert_eq!(Money::parse_str("($123,456.78)"), Ok(Money(-12345678)))
+    }
+
+    #[test]
+    fn test_valid_min() {
+        assert_eq!(Money::parse_str("-92233720368547758.08"), Ok(Money::min()))
+    }
+
+    #[test]
+    fn test_valid_max() {
+        assert_eq!(Money::parse_str("92233720368547758.07"), Ok(Money::max()))
+    }
+
+    #[test]
+    fn test_invalid_min() {
+        assert_eq!(Money::parse_str("-92233720368547758.085"), Err(Error::OutOfRange))
+    }
+
+    #[test]
+    fn test_invalid_max() {
+        assert_eq!(Money::parse_str("92233720368547758.075"), Err(Error::OutOfRange))
+    }
 
     // TODO: int parsing
-
-    // TODO: https://github.com/postgres/postgres/blob/master/src/test/regress/sql/money.sql
-    // TODO: https://github.com/postgres/postgres/blob/master/src/test/regress/expected/money.out
 }
