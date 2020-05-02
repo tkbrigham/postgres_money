@@ -1,7 +1,6 @@
 use regex::{Regex, Match};
 
-pub mod error;
-pub use self::error::Error;
+pub use crate::error::Error;
 
 use crate::Money;
 
