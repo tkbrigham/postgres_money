@@ -4,7 +4,7 @@ mod parser;
 mod error;
 
 use error::Error;
-use std::ops::Add;
+use std::ops::{Add, Sub, Mul, Div};
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Money(Inner);
@@ -72,17 +72,22 @@ impl Default for Money {
     }
 }
 
-impl Add for Money {
-    type Output = Self;
+macro_rules! derive_trait_from_inner {
+    (impl $imp:ident, $method:ident) => {
+        impl $imp for Money {
+            type Output = Self;
 
-    // TODO: should this return a Result and do checked_add instead of panic?
-    fn add(self, rhs: Money) -> Self::Output {
-        Money(self.inner() + rhs.inner())
+            // TODO: should this return a Result and do checked_add instead of panic?
+            fn $method(self, rhs: Money) -> Self::Output {
+                Money(self.inner().$method(rhs.inner()))
+            }
+        }
     }
 }
 
-
-
+derive_trait_from_inner!(impl Add, add);
+derive_trait_from_inner!(impl Sub, sub);
+derive_trait_from_inner!(impl Mul, mul);
 
 #[cfg(test)]
 mod tests {
@@ -115,18 +120,46 @@ mod tests {
         Money::min() + Money(-1);
     }
 
-    // #[test]
-    // fn test_subtraction() {
-    //
-    // }
-    //
+    #[test]
+    fn test_subtraction_success() {
+        assert_eq!(Money(2) - Money(1), Money(1))
+    }
+
+    #[test]
+    #[should_panic]
+    #[allow(unused_must_use)]
+    fn test_subtraction_failure_overflow_max() {
+        Money::max() - Money(-1);
+    }
+
+    #[test]
+    #[should_panic]
+    #[allow(unused_must_use)]
+    fn test_subtraction_failure_overflow_min() {
+        Money::min() - Money(1);
+    }
+
+    #[test]
+    fn test_multiplication_success() {
+        assert_eq!(Money(7) * Money(3), Money(21))
+    }
+
+    #[test]
+    #[should_panic]
+    #[allow(unused_must_use)]
+    fn test_multiplication_failure_overflow_max() {
+        Money::max() * Money(100);
+    }
+
+    #[test]
+    #[should_panic]
+    #[allow(unused_must_use)]
+    fn test_multiplication_failure_overflow_min() {
+        Money::min() * Money(100);
+    }
+
     // #[test]
     // fn test_division() {
-    //
-    // }
-    //
-    // #[test]
-    // fn test_multiplication() {
     //
     // }
 
