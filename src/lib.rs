@@ -84,7 +84,7 @@ macro_rules! derive_trait_from_inner {
     };
 }
 
-macro_rules! derive_trait_for_type {
+macro_rules! derive_trait_for_money_with_type {
     (impl $imp:ident with $t:ty, $method:ident) => {
         impl $imp<$t> for Money
         where
@@ -99,15 +99,31 @@ macro_rules! derive_trait_for_type {
     };
 }
 
+macro_rules! derive_trait_for_type_with_money {
+    (impl $imp:ident with $t:ty, $method:ident) => {
+        impl $imp<Money> for $t
+        where
+            $t: Into<i64>,
+        {
+            type Output = Money;
+
+            fn $method(self, rhs: Money) -> Self::Output {
+                Money((self as i64).$method(rhs.inner()))
+            }
+        }
+    };
+}
+
 macro_rules! add_mul_int_impl {
      ($($t:ty)+) => ($(
-         derive_trait_for_type! { impl Mul with $t, mul }
+         derive_trait_for_money_with_type! { impl Mul with $t, mul }
+         derive_trait_for_type_with_money! { impl Mul with $t, mul }
      )+)
 }
 
 macro_rules! add_div_int_impl {
      ($($t:ty)+) => ($(
-         derive_trait_for_type! { impl Div with $t, div }
+         derive_trait_for_money_with_type! { impl Div with $t, div }
      )+)
 }
 
@@ -121,10 +137,15 @@ mod tests {
     use crate::Money;
 
     macro_rules! gen_mul_int_tests {
-        ($t:ty, $success:ident, $of_max:ident, $of_min:ident) => {
+        ($t:ty, $success:ident, $success_reversed:ident, $of_max:ident, $of_min:ident) => {
             #[test]
             fn $success() {
                 assert_eq!(Money(7) * 3 as $t, Money(21))
+            }
+
+            #[test]
+            fn $success_reversed() {
+                assert_eq!(3 as $t * Money(7), Money(21))
             }
 
             #[test]
@@ -157,9 +178,18 @@ mod tests {
         };
     }
 
+    #[test]
+    fn test_money_default() {
+        let default_money = Money::default();
+        let nil_money = Money::none();
+
+        assert_eq!(default_money, nil_money);
+    }
+
     gen_mul_int_tests! {
         i64,
         test_mul_success_i64,
+        test_mul_success_reversed_i64,
         test_mul_fail_overflow_max_i64,
         test_mul_fail_overflow_min_i64
     }
@@ -167,6 +197,7 @@ mod tests {
     gen_mul_int_tests! {
         i32,
         test_mul_success_i32,
+        test_mul_success_reversed_i32,
         test_mul_fail_overflow_max_i32,
         test_mul_fail_overflow_min_i32
     }
@@ -174,6 +205,7 @@ mod tests {
     gen_mul_int_tests! {
         i16,
         test_mul_success_i16,
+        test_mul_success_reversed_i16,
         test_mul_fail_overflow_max_i16,
         test_mul_fail_overflow_min_i16
     }
@@ -181,6 +213,7 @@ mod tests {
     gen_mul_int_tests! {
         i8,
         test_mul_success_i8,
+        test_mul_success_reversed_i8,
         test_mul_fail_overflow_max_i8,
         test_mul_fail_overflow_min_i8
     }
@@ -188,6 +221,7 @@ mod tests {
     gen_mul_int_tests! {
         u32,
         test_mul_success_u32,
+        test_mul_success_reversed_u32,
         test_mul_fail_overflow_max_u32,
         test_mul_fail_overflow_min_u32
     }
@@ -195,6 +229,7 @@ mod tests {
     gen_mul_int_tests! {
         u16,
         test_mul_success_u16,
+        test_mul_success_reversed_u16,
         test_mul_fail_overflow_max_u16,
         test_mul_fail_overflow_min_u16
     }
@@ -202,6 +237,7 @@ mod tests {
     gen_mul_int_tests! {
         u8,
         test_mul_success_u8,
+        test_mul_success_reversed_u8,
         test_mul_fail_overflow_max_u8,
         test_mul_fail_overflow_min_u8
     }
@@ -246,14 +282,6 @@ mod tests {
         u8,
         test_div_success_u8,
         test_div_truncates_u8
-    }
-
-    #[test]
-    fn test_money_default() {
-        let default_money = Money::default();
-        let nil_money = Money::none();
-
-        assert_eq!(default_money, nil_money);
     }
 
     #[test]
