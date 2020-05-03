@@ -9,7 +9,7 @@ impl Money {
         parse_en_us_utf8(input)
     }
 
-    pub fn parse_int(cents: i64) -> Money {
+    pub fn from(cents: i64) -> Money {
         Money(cents)
     }
 }
@@ -282,28 +282,28 @@ mod tests {
     // TODO: int parsing
     #[test]
     fn test_valid_123_45_int() {
-        assert_eq!(Money::parse_int(12345), Money(12345))
+        assert_eq!(Money::from(12345), Money(12345))
     }
 
     #[test]
     fn test_valid_123_451_int() {
-        assert_eq!(Money::parse_int(123451), Money(123451))
+        assert_eq!(Money::from(123451), Money(123451))
     }
 
     #[test]
     fn test_valid_123_454_int() {
-        assert_eq!(Money::parse_int(123454), Money(123454))
+        assert_eq!(Money::from(123454), Money(123454))
     }
 
     #[test]
     fn test_valid_1234567890_int() {
-        assert_eq!(Money::parse_int(1234567890), Money(1234567890))
+        assert_eq!(Money::from(1234567890), Money(1234567890))
     }
 
     #[test]
     fn test_valid_12345678901234567_int() {
         assert_eq!(
-            Money::parse_int(12345678901234567),
+            Money::from(12345678901234567),
             Money(12345678901234567)
         )
     }
@@ -311,13 +311,13 @@ mod tests {
     #[test]
     fn test_valid_neg_12345678901234567_int() {
         assert_eq!(
-            Money::parse_int(-12345678901234567),
+            Money::from(-12345678901234567),
             Money(-12345678901234567)
         )
     }
 
     #[test]
     fn test_valid_neg_123456_78_int() {
-        assert_eq!(Money::parse_int(-12345678), Money(-12345678))
+        assert_eq!(Money::from(-12345678), Money(-12345678))
     }
 }
