@@ -99,13 +99,13 @@ macro_rules! derive_trait_for_type {
     };
 }
 
-macro_rules! add_mul_impl {
+macro_rules! add_mul_int_impl {
      ($($t:ty)+) => ($(
          derive_trait_for_type! { impl Mul with $t, mul }
      )+)
 }
 
-macro_rules! add_div_impl {
+macro_rules! add_div_int_impl {
      ($($t:ty)+) => ($(
          derive_trait_for_type! { impl Div with $t, div }
      )+)
@@ -113,14 +113,14 @@ macro_rules! add_div_impl {
 
 derive_trait_from_inner!(impl Add, add);
 derive_trait_from_inner!(impl Sub, sub);
-add_mul_impl! { i64 i32 i16 i8 u32 u16 u8 }
-add_div_impl! { i64 i32 i16 i8 u32 u16 u8 }
+add_mul_int_impl! { i64 i32 i16 i8 u32 u16 u8 }
+add_div_int_impl! { i64 i32 i16 i8 u32 u16 u8 }
 
 #[cfg(test)]
 mod tests {
     use crate::Money;
 
-    macro_rules! gen_mul_tests {
+    macro_rules! gen_mul_int_tests {
         ($t:ty, $success:ident, $of_max:ident, $of_min:ident) => {
             #[test]
             fn $success() {
@@ -143,7 +143,7 @@ mod tests {
         };
     }
 
-    macro_rules! gen_div_tests {
+    macro_rules! gen_div_int_tests {
         ($t:ty, $success:ident, $truncates:ident) => {
             #[test]
             fn $success() {
@@ -157,92 +157,92 @@ mod tests {
         };
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         i64,
         test_mul_success_i64,
         test_mul_fail_overflow_max_i64,
         test_mul_fail_overflow_min_i64
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         i32,
         test_mul_success_i32,
         test_mul_fail_overflow_max_i32,
         test_mul_fail_overflow_min_i32
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         i16,
         test_mul_success_i16,
         test_mul_fail_overflow_max_i16,
         test_mul_fail_overflow_min_i16
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         i8,
         test_mul_success_i8,
         test_mul_fail_overflow_max_i8,
         test_mul_fail_overflow_min_i8
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         u32,
         test_mul_success_u32,
         test_mul_fail_overflow_max_u32,
         test_mul_fail_overflow_min_u32
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         u16,
         test_mul_success_u16,
         test_mul_fail_overflow_max_u16,
         test_mul_fail_overflow_min_u16
     }
 
-    gen_mul_tests! {
+    gen_mul_int_tests! {
         u8,
         test_mul_success_u8,
         test_mul_fail_overflow_max_u8,
         test_mul_fail_overflow_min_u8
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         i64,
         test_div_success_i64,
         test_div_truncates_i64
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         i32,
         test_div_success_i32,
         test_div_truncates_i32
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         i16,
         test_div_success_i16,
         test_div_truncates_i16
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         i8,
         test_div_success_i8,
         test_div_truncates_i8
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         u32,
         test_div_success_u32,
         test_div_truncates_u32
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         u16,
         test_div_success_u16,
         test_div_truncates_u16
     }
 
-    gen_div_tests! {
+    gen_div_int_tests! {
         u8,
         test_div_success_u8,
         test_div_truncates_u8
