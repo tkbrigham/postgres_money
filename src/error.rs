@@ -2,5 +2,5 @@
 pub enum Error {
     OutOfRange,
     ParseInt,
-    InvalidString
+    InvalidString,
 }

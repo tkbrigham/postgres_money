@@ -1,4 +1,4 @@
-use regex::{Regex, Match};
+use regex::{Match, Regex};
 
 pub use crate::error::Error;
 
@@ -38,7 +38,7 @@ impl Amount {
             .ok_or(Error::InvalidString)?;
 
         if caps.len() != 3 {
-            return Err(Error::InvalidString)
+            return Err(Error::InvalidString);
         }
 
         Ok(Amount {
@@ -68,19 +68,21 @@ impl Amount {
         let has_minus = Regex::new(r"-(.*)").unwrap();
         let has_paren = Regex::new(r"\((.*)\)").unwrap();
 
-        let m: Vec<Regex> = vec![has_minus, has_paren].into_iter()
+        let m: Vec<Regex> = vec![has_minus, has_paren]
+            .into_iter()
             .filter(|r| r.is_match(s))
             .collect();
 
         return match m.len() {
             0 => Self::positive(s),
             1 => {
-                let transformed = m.into_iter()
+                let transformed = m
+                    .into_iter()
                     .fold(s, |s, r| r.captures(s).unwrap().get(1).unwrap().as_str());
                 Self::negative(transformed)
-            },
-            _ => Err(Error::InvalidString)
-        }
+            }
+            _ => Err(Error::InvalidString),
+        };
     }
 
     fn to_money(&self) -> Result<Money, Error> {
@@ -93,14 +95,15 @@ impl Amount {
             -1
         } else {
             1
-        }
+        };
     }
 
     fn combine_dollars_and_cents(&self) -> Result<i64, Error> {
         let dollars = mk_int(&self.dollars)? * self.apply_sign();
         let cents = mk_rounded_cents(&self.cents)? * self.apply_sign();
 
-        dollars.checked_mul(100)
+        dollars
+            .checked_mul(100)
             .ok_or(Error::OutOfRange)?
             .checked_add(cents)
             .ok_or(Error::OutOfRange)
@@ -128,17 +131,16 @@ fn round_cents(s: &String) -> Result<i64, Error> {
 
 fn mk_int(s: &str) -> Result<i64, Error> {
     if s.is_empty() {
-        return Ok(0)
+        return Ok(0);
     }
 
-    str::parse::<i64>(&s)
-        .map_err(|e| {
-            // This is a janky workaround until ParseIntError.kind() is stable
-            match e.to_string().find("too large") {
-                Some(_) => Error::OutOfRange,
-                None => Error::ParseInt
-            }
-        })
+    str::parse::<i64>(&s).map_err(|e| {
+        // This is a janky workaround until ParseIntError.kind() is stable
+        match e.to_string().find("too large") {
+            Some(_) => Error::OutOfRange,
+            None => Error::ParseInt,
+        }
+    })
 }
 
 #[cfg(test)]
@@ -183,17 +185,26 @@ mod tests {
 
     #[test]
     fn test_valid_12345678901234567() {
-        assert_eq!(Money::parse_str("12345678901234567"), Ok(Money(1234567890123456700)))
+        assert_eq!(
+            Money::parse_str("12345678901234567"),
+            Ok(Money(1234567890123456700))
+        )
     }
 
     #[test]
     fn test_invalid_123456789012345678() {
-        assert_eq!(Money::parse_str("123456789012345678"), Err(Error::OutOfRange))
+        assert_eq!(
+            Money::parse_str("123456789012345678"),
+            Err(Error::OutOfRange)
+        )
     }
 
     #[test]
     fn test_invalid_9223372036854775807() {
-        assert_eq!(Money::parse_str("9223372036854775807"), Err(Error::OutOfRange))
+        assert_eq!(
+            Money::parse_str("9223372036854775807"),
+            Err(Error::OutOfRange)
+        )
     }
 
     #[test]
@@ -208,17 +219,26 @@ mod tests {
 
     #[test]
     fn test_valid_neg_12345678901234567() {
-        assert_eq!(Money::parse_str("-12345678901234567"), Ok(Money(-1234567890123456700)))
+        assert_eq!(
+            Money::parse_str("-12345678901234567"),
+            Ok(Money(-1234567890123456700))
+        )
     }
 
     #[test]
     fn test_invalid_neg_123456789012345678() {
-        assert_eq!(Money::parse_str("-123456789012345678"), Err(Error::OutOfRange))
+        assert_eq!(
+            Money::parse_str("-123456789012345678"),
+            Err(Error::OutOfRange)
+        )
     }
 
     #[test]
     fn test_invalid_neg_9223372036854775808() {
-        assert_eq!(Money::parse_str("-9223372036854775808"), Err(Error::OutOfRange))
+        assert_eq!(
+            Money::parse_str("-9223372036854775808"),
+            Err(Error::OutOfRange)
+        )
     }
 
     #[test]
@@ -243,16 +263,21 @@ mod tests {
 
     #[test]
     fn test_invalid_min() {
-        assert_eq!(Money::parse_str("-92233720368547758.085"), Err(Error::OutOfRange))
+        assert_eq!(
+            Money::parse_str("-92233720368547758.085"),
+            Err(Error::OutOfRange)
+        )
     }
 
     #[test]
     fn test_invalid_max() {
-        assert_eq!(Money::parse_str("92233720368547758.075"), Err(Error::OutOfRange))
+        assert_eq!(
+            Money::parse_str("92233720368547758.075"),
+            Err(Error::OutOfRange)
+        )
     }
 
     // Money Ops
-
 
     // TODO: int parsing
     #[test]
@@ -277,12 +302,18 @@ mod tests {
 
     #[test]
     fn test_valid_12345678901234567_int() {
-        assert_eq!(Money::parse_int(12345678901234567), Money(12345678901234567))
+        assert_eq!(
+            Money::parse_int(12345678901234567),
+            Money(12345678901234567)
+        )
     }
 
     #[test]
     fn test_valid_neg_12345678901234567_int() {
-        assert_eq!(Money::parse_int(-12345678901234567), Money(-12345678901234567))
+        assert_eq!(
+            Money::parse_int(-12345678901234567),
+            Money(-12345678901234567)
+        )
     }
 
     #[test]
