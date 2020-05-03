@@ -72,7 +72,7 @@ impl Default for Money {
     }
 }
 
-macro_rules! derive_trait_from_inner {
+macro_rules! derive_op_trait_from_inner {
     (impl $imp:ident, $method:ident) => {
         impl $imp for Money {
             type Output = Self;
@@ -121,8 +121,8 @@ macro_rules! add_div_impl {
     )+)
 }
 
-derive_trait_from_inner!(impl Add, add);
-derive_trait_from_inner!(impl Sub, sub);
+derive_op_trait_from_inner!(impl Add, add);
+derive_op_trait_from_inner!(impl Sub, sub);
 add_mul_impl! { i64 i32 i16 i8 u32 u16 u8 f64 f32 }
 add_div_impl! { i64 i32 i16 i8 u32 u16 u8 f64 f32 }
 
