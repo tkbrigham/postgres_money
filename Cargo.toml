@@ -23,5 +23,17 @@ version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-regex = "1"
+[package.metadata.docs.rs]
+features = ["serde"]
+
+[package.metadata.playground]
+features = ["serde"]
+
+[dependencies.regex]
+version = "1"
+
+[dependencies.serde]
+default-features = false
+features = [ "serde_derive" ]
+optional = true
+version = "1.0.106"
