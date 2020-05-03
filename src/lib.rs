@@ -6,7 +6,11 @@ mod parser;
 use error::Error;
 use std::ops::{Add, Div, Mul, Sub};
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Money(Inner);
 pub type Inner = i64;
 
@@ -26,7 +30,7 @@ impl Money {
         Money(0)
     }
 
-    fn inner(&self) -> Inner {
+    pub const fn inner(&self) -> Inner {
         self.0
     }
 
