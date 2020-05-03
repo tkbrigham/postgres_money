@@ -345,4 +345,65 @@ mod tests {
     fn test_money_div_f32() {
         assert_eq!(Money(12300) / 2 as f32, Money(6150))
     }
+
+    // Comparisons
+    #[test]
+    fn test_eq() {
+        assert_eq!(Money(12300), Money(12300))
+    }
+
+    #[test]
+    fn test_not_eq() {
+        assert_ne!(Money(12300), Money(12400))
+    }
+
+    #[test]
+    fn test_lt_eq() {
+        assert!(Money(12300) <= Money(12300))
+    }
+
+    #[test]
+    fn test_gt_eq() {
+        assert!(Money(12300) >= Money(12300))
+    }
+
+    #[test]
+    fn test_lt() {
+        assert!(Money(12300) < Money(12400))
+    }
+
+    #[test]
+    fn test_gt() {
+        assert!(Money(12300) > Money(12200))
+    }
+
+    #[test]
+    fn test_eq_inverse() {
+        assert_eq!(Money(12300) == Money(12301), false)
+    }
+
+    #[test]
+    fn test_not_eq_inverse() {
+        assert_eq!(Money(12300) != Money(12300), false)
+    }
+
+    #[test]
+    fn test_lt_eq_inverse() {
+        assert_eq!(Money(12300) <= Money(12299), false)
+    }
+
+    #[test]
+    fn test_gt_eq_inverse() {
+        assert_eq!(Money(12300) >= Money(12301), false)
+    }
+
+    #[test]
+    fn test_lt_inverse() {
+        assert_eq!(Money(12300) < Money(12200), false)
+    }
+
+    #[test]
+    fn test_gt_inverse() {
+        assert_eq!(Money(12300) > Money(12400), false)
+    }
 }
