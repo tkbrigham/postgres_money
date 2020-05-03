@@ -4,7 +4,7 @@ mod error;
 mod parser;
 
 use error::Error;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Money(Inner);
@@ -105,9 +105,16 @@ macro_rules! add_mul_impl {
      )+)
 }
 
+macro_rules! add_div_impl {
+     ($($t:ty)+) => ($(
+         derive_trait_for_type! { impl Div with $t, div }
+     )+)
+}
+
 derive_trait_from_inner!(impl Add, add);
 derive_trait_from_inner!(impl Sub, sub);
 add_mul_impl! { i64 i32 i16 i8 u32 u16 u8 }
+add_div_impl! { i64 i32 i16 i8 u32 u16 u8 }
 
 #[cfg(test)]
 mod tests {
@@ -132,6 +139,20 @@ mod tests {
             #[allow(unused_must_use)]
             fn $of_min() {
                 Money::min() * 100 as $t;
+            }
+        };
+    }
+
+    macro_rules! gen_div_tests {
+        ($t:ty, $success:ident, $truncates:ident) => {
+            #[test]
+            fn $success() {
+                assert_eq!(Money(21) / 3 as $t, Money(7))
+            }
+
+            #[test]
+            fn $truncates() {
+                assert_eq!(Money(21) / 2 as $t, Money(10))
             }
         };
     }
@@ -185,28 +206,47 @@ mod tests {
         test_mul_fail_overflow_min_u8
     }
 
-    // macro_rules! test_mul_for_type {
-    //     ($t:ty $success:expr $overflow_max:expr $overflow_min:) => {
-    //         #[test]
-    //         fn test_multiplication_i32_success() {
-    //             assert_eq!(Money(7) * 3 as $t, Money(21))
-    //         }
-    //
-    //         #[test]
-    //         #[should_panic]
-    //         #[allow(unused_must_use)]
-    //         fn test_multiplication_($t)_failure_overflow_max() {
-    //             Money::max() * 100 as $t;
-    //         }
-    //
-    //         #[test]
-    //         #[should_panic]
-    //         #[allow(unused_must_use)]
-    //         fn test_multiplication_$t_failure_overflow_min() {
-    //             Money::min() * 100 as $t;
-    //         }
-    //     }
-    // }
+    gen_div_tests! {
+        i64,
+        test_div_success_i64,
+        test_div_truncates_i64
+    }
+
+    gen_div_tests! {
+        i32,
+        test_div_success_i32,
+        test_div_truncates_i32
+    }
+
+    gen_div_tests! {
+        i16,
+        test_div_success_i16,
+        test_div_truncates_i16
+    }
+
+    gen_div_tests! {
+        i8,
+        test_div_success_i8,
+        test_div_truncates_i8
+    }
+
+    gen_div_tests! {
+        u32,
+        test_div_success_u32,
+        test_div_truncates_u32
+    }
+
+    gen_div_tests! {
+        u16,
+        test_div_success_u16,
+        test_div_truncates_u16
+    }
+
+    gen_div_tests! {
+        u8,
+        test_div_success_u8,
+        test_div_truncates_u8
+    }
 
     #[test]
     fn test_money_default() {
@@ -252,30 +292,6 @@ mod tests {
     #[allow(unused_must_use)]
     fn test_subtraction_failure_overflow_min() {
         Money::min() - Money(1);
-    }
-
-    // #[test]
-    // fn test_multiplication_i32_success() {
-    //     assert_eq!(Money(7) * 3 as i32, Money(21))
-    // }
-    //
-    // #[test]
-    // #[should_panic]
-    // #[allow(unused_must_use)]
-    // fn test_multiplication_i32_failure_overflow_max() {
-    //     Money::max() * 100 as i32;
-    // }
-    //
-    // #[test]
-    // #[should_panic]
-    // #[allow(unused_must_use)]
-    // fn test_multiplication_i32_failure_overflow_min() {
-    //     Money::min() * 100 as i32;
-    // }
-
-    #[test]
-    fn test_division() {
-        println!("{}", 87808 / 11);
     }
 
     // SELECT m + '123' FROM money_data;
