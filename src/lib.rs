@@ -455,4 +455,25 @@ mod tests {
     fn test_truncated_division_i8() {
         assert_eq!(Money(87808) / 11 as i8, Money(7982))
     }
+
+    // Precision loss
+    #[test]
+    fn test_precision_loss_i64() {
+        assert_eq!(Money(9000000000000009900) / 10 as i64, Money(900000000000000990))
+    }
+
+    #[test]
+    fn test_precision_loss_i32() {
+        assert_eq!(Money(9000000000000009900) / 10 as i32, Money(900000000000000990))
+    }
+
+    #[test]
+    fn test_precision_loss_i16() {
+        assert_eq!(Money(9000000000000009900) / 10 as i16, Money(900000000000000990))
+    }
+
+    #[test]
+    fn test_precision_loss_i8() {
+        assert_eq!(Money(9000000000000009900) / 10 as i8, Money(900000000000000990))
+    }
 }
