@@ -11,8 +11,8 @@ pub struct Money(Inner);
 pub type Inner = i64;
 
 impl Money {
-    pub const MIN_INNER: Inner = -9223372036854775808;
-    pub const MAX_INNER: Inner = 9223372036854775807;
+    pub const MIN_INNER: Inner = std::i64::MIN;
+    pub const MAX_INNER: Inner = std::i64::MAX;
 
     pub const fn min() -> Money {
         Money(Money::MIN_INNER)
@@ -86,10 +86,7 @@ macro_rules! derive_trait_from_inner {
 
 macro_rules! derive_trait_for_money_with_type {
     (impl $imp:ident with $t:ty, $method:ident) => {
-        impl $imp<$t> for Money
-        where
-            $t: Into<i64>,
-        {
+        impl $imp<$t> for Money {
             type Output = Self;
 
             fn $method(self, rhs: $t) -> Self::Output {
@@ -101,10 +98,7 @@ macro_rules! derive_trait_for_money_with_type {
 
 macro_rules! derive_trait_for_type_with_money {
     (impl $imp:ident with $t:ty, $method:ident) => {
-        impl $imp<Money> for $t
-        where
-            $t: Into<i64>,
-        {
+        impl $imp<Money> for $t {
             type Output = Money;
 
             fn $method(self, rhs: Money) -> Self::Output {
@@ -114,23 +108,23 @@ macro_rules! derive_trait_for_type_with_money {
     };
 }
 
-macro_rules! add_mul_int_impl {
-     ($($t:ty)+) => ($(
-         derive_trait_for_money_with_type! { impl Mul with $t, mul }
-         derive_trait_for_type_with_money! { impl Mul with $t, mul }
-     )+)
+macro_rules! add_mul_impl {
+    ($($t:ty)+) => ($(
+        derive_trait_for_money_with_type! { impl Mul with $t, mul }
+        derive_trait_for_type_with_money! { impl Mul with $t, mul }
+    )+)
 }
 
-macro_rules! add_div_int_impl {
-     ($($t:ty)+) => ($(
-         derive_trait_for_money_with_type! { impl Div with $t, div }
-     )+)
+macro_rules! add_div_impl {
+    ($($t:ty)+) => ($(
+        derive_trait_for_money_with_type! { impl Div with $t, div }
+    )+)
 }
 
 derive_trait_from_inner!(impl Add, add);
 derive_trait_from_inner!(impl Sub, sub);
-add_mul_int_impl! { i64 i32 i16 i8 u32 u16 u8 }
-add_div_int_impl! { i64 i32 i16 i8 u32 u16 u8 }
+add_mul_impl! { i64 i32 i16 i8 u32 u16 u8 f64 f32 }
+add_div_impl! { i64 i32 i16 i8 u32 u16 u8 f64 f32 }
 
 #[cfg(test)]
 mod tests {
@@ -322,27 +316,33 @@ mod tests {
         Money::min() - Money(1);
     }
 
-    // SELECT m + '123' FROM money_data;
-    // SELECT m + '123.45' FROM money_data;
-    // SELECT m - '123.45' FROM money_data;
-    // SELECT m / '2'::money FROM money_data;
-    // SELECT m * 2 FROM money_data;
-    // SELECT 2 * m FROM money_data;
-    // SELECT m / 2 FROM money_data;
+    #[test]
+    fn test_money_multiply_f64() {
+        assert_eq!(Money(12300) * 2 as f64, Money(24600))
+    }
 
-    // -- All true
-    // SELECT m = '$123.00' FROM money_data;
-    // SELECT m != '$124.00' FROM money_data;
-    // SELECT m <= '$123.00' FROM money_data;
-    // SELECT m >= '$123.00' FROM money_data;
-    // SELECT m < '$124.00' FROM money_data;
-    // SELECT m > '$122.00' FROM money_data;
-    //
-    // -- All false
-    // SELECT m = '$123.01' FROM money_data;
-    // SELECT m != '$123.00' FROM money_data;
-    // SELECT m <= '$122.99' FROM money_data;
-    // SELECT m >= '$123.01' FROM money_data;
-    // SELECT m > '$124.00' FROM money_data;
-    // SELECT m < '$122.00' FROM money_data;
+    #[test]
+    fn test_f64_multiply_money() {
+        assert_eq!(2 as f64 * Money(12300), Money(24600))
+    }
+
+    #[test]
+    fn test_money_div_f64() {
+        assert_eq!(Money(12300) / 2 as f64, Money(6150))
+    }
+
+    #[test]
+    fn test_money_multiply_f32() {
+        assert_eq!(Money(12300) * 2 as f32, Money(24600))
+    }
+
+    #[test]
+    fn test_f32_multiply_money() {
+        assert_eq!(2 as f32 * Money(12300), Money(24600))
+    }
+
+    #[test]
+    fn test_money_div_f32() {
+        assert_eq!(Money(12300) / 2 as f32, Money(6150))
+    }
 }
