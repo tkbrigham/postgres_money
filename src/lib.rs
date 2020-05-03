@@ -124,7 +124,25 @@ macro_rules! add_div_impl {
 derive_op_trait_from_inner!(impl Add, add);
 derive_op_trait_from_inner!(impl Sub, sub);
 add_mul_impl! { i64 i32 i16 i8 u32 u16 u8 f64 f32 }
-add_div_impl! { i64 i32 i16 i8 u32 u16 u8 f64 f32 }
+add_div_impl! { i64 i32 i16 i8 u32 u16 u8 }
+
+impl Div<f64> for Money {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        let inner = self.inner() as f64 / rhs;
+        Money(inner.round() as i64)
+    }
+}
+
+impl Div<f32> for Money {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        let inner = self.inner() as f32 / rhs;
+        Money(inner.round() as i64)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -405,5 +423,36 @@ mod tests {
     #[test]
     fn test_gt_inverse() {
         assert_eq!(Money(12300) > Money(12400), false)
+    }
+
+    // Rounding vs. Truncation in Division
+    #[test]
+    fn test_rounded_division_f64() {
+        assert_eq!(Money(87808) / 11.0 as f64, Money(7983))
+    }
+
+    #[test]
+    fn test_rounded_division_f32() {
+        assert_eq!(Money(87808) / 11.0 as f32, Money(7983))
+    }
+
+    #[test]
+    fn test_truncated_division_i64() {
+        assert_eq!(Money(87808) / 11 as i64, Money(7982))
+    }
+
+    #[test]
+    fn test_truncated_division_i32() {
+        assert_eq!(Money(87808) / 11 as i32, Money(7982))
+    }
+
+    #[test]
+    fn test_truncated_division_i16() {
+        assert_eq!(Money(87808) / 11 as i16, Money(7982))
+    }
+
+    #[test]
+    fn test_truncated_division_i8() {
+        assert_eq!(Money(87808) / 11 as i8, Money(7982))
     }
 }
