@@ -1,3 +1,21 @@
+#![doc(html_root_url = "https://docs.rs/postgres_money/0.1")]
+
+// Copyright 2020 Thomas Brigham
+// Licensed under the  MIT license <LICENSE or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except according to those terms.
+
+//! # Dependencies
+//!
+//! By default, this crate depends on the `regex` crate.
+//!
+//! To activate JSON serialization via the `serde` crate, use syntax like:
+//! ```toml
+//! [dependencies]
+//! postgres_money = { version = "0.1", features = ["serde"] }
+//! ```
+//!
+//! Visit the docs for [Money](struct.Money.html) for more info.
+
 use std::{fmt, str};
 
 mod error;
@@ -9,55 +27,67 @@ use std::ops::{Add, Div, Mul, Sub};
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 
+/// Representation of the Postgres 'money' type
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Money(Inner);
-pub type Inner = i64;
+type Inner = i64;
 
 impl Money {
-    pub const MIN_INNER: Inner = std::i64::MIN;
-    pub const MAX_INNER: Inner = std::i64::MAX;
+    const MIN_INNER: Inner = std::i64::MIN;
+    const MAX_INNER: Inner = std::i64::MAX;
 
+    /// Minimum allowable value for Money
     pub const fn min() -> Money {
         Money(Money::MIN_INNER)
     }
 
+    /// Maximum allowable value for Money
     pub const fn max() -> Money {
         Money(Money::MAX_INNER)
     }
 
+    /// Instantiate Money as zero
     pub const fn none() -> Money {
         Money(0)
     }
 
-    pub const fn inner(&self) -> Inner {
+    const fn inner(&self) -> Inner {
         self.0
     }
 
     fn dollars(&self) -> String {
-        format!("{}", self.0 / 100)
+        format!("{}", (self.0 / 100).abs())
     }
 
     fn cents(&self) -> String {
-        let n = self.0.abs() % 100;
+        let n = (self.0 % 100).abs();
         let mut zero_pad = "";
         if n < 10 {
             zero_pad = "0"
         }
         format!("{}{}", zero_pad, n)
     }
+
+    fn sign(&self) -> &str {
+        if self.inner() < 0 {
+            "-"
+        } else {
+            ""
+        }
+    }
 }
 
 impl fmt::Debug for Money {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "${}.{}", self.dollars(), self.cents())
+        write!(f, "{}", self.to_string())
     }
 }
 
 impl fmt::Display for Money {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "${}.{}", self.dollars(), self.cents())
+        write!(f, "{}${}.{}", self.sign(), self.dollars(), self.cents())
     }
 }
 

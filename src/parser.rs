@@ -1,14 +1,124 @@
 use regex::{Match, Regex};
 
+/// #[doc(inline)]
 pub use crate::error::Error;
 
 use crate::Money;
 
 impl Money {
+    /// Attempt to parse a `&str` into a `Money`.
+    ///
+    /// NOTE: as of this writing, only the Postgres `en_US.UTF-8` locale is supported.
+    ///
+    ///
+    ///
+    /// For more information about the Postgres `money` type, please see
+    /// [8.2. Monetary Types](https://www.postgresql.org/docs/9.1/datatype-money.html).
+    ///
+    /// For more about how locales work with monetary values, please see
+    /// [lc_monetary](https://www.postgresql.org/docs/9.1/runtime-config-client.html#GUC-LC-MONETARY).
+    ///
+    /// # Examples
+    /// Parse a string of dollars
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "324023040222";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$324023040222.00", money.to_string());
+    /// ```
+    ///
+    /// Parse a string of cents
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = ".32";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$0.32", money.to_string());
+    /// ```
+    ///
+    /// Parse a string with dollars and cents
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "93.32";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$93.32", money.to_string());
+    /// ```
+    ///
+    /// Handles parentheses
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "(93.32)";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("-$93.32", money.to_string());
+    /// ```
+    ///
+    /// Handles dollar symbols
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "$93.32";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$93.32", money.to_string());
+    /// ```
+    ///
+    /// Rounds correctly
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "$123.454";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$123.45", money.to_string());
+    ///
+    /// let dollars = "$123.455";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$123.46", money.to_string());
+    /// ```
+    ///
+    /// Handles commas
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "$123,456.78";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$123456.78", money.to_string());
+    /// ```
+    ///
+    /// Max value
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "92233720368547758.07";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("$92233720368547758.07", money.to_string());
+    /// assert_eq!(Money::max().to_string(), money.to_string());
+    /// ```
+    ///
+    /// Min value
+    /// ```
+    /// use postgres_money::Money;
+    /// let dollars = "-92233720368547758.08";
+    /// let money = Money::parse_str(dollars).unwrap();
+    ///
+    /// assert_eq!("-$92233720368547758.08", money.to_string());
+    /// assert_eq!(Money::min().to_string(), money.to_string());
+    /// ```
     pub fn parse_str(input: &str) -> Result<Money, Error> {
         parse_en_us_utf8(input)
     }
 
+    /// Construct a Money instance from an i64
+    /// # Examples
+    /// ```
+    /// use postgres_money::Money;
+    /// let cents = 324023040222;
+    /// let money = Money::from(cents);
+    ///
+    /// assert_eq!("$3240230402.22", money.to_string());
+    /// ```
     pub fn from(cents: i64) -> Money {
         Money(cents)
     }
