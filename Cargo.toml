@@ -4,19 +4,16 @@ categories = [
     "data-structures",
     "parser-implementations"
 ]
-description = "A library to generate and parse money types."
-#TODO
-documentation = "www.google.com"
+description = "A library to generate and parse Postgres money types."
 edition = "2018"
 keywords = [
     "money",
     "currency",
     "cash"
 ]
-license = "Apache-2.0 OR MIT"
+license-file = "LICENSE"
 homepage = "https://github.com/tkbrigham/postgres_money"
 name = "postgres_money"
-#TODO
 readme = "README.md"
 repository = "https://github.com/tkbrigham/postgres_money"
 version = "0.1.0"
