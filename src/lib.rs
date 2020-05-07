@@ -52,7 +52,8 @@ impl Money {
         Money(0)
     }
 
-    const fn inner(&self) -> Inner {
+    /// Expose the wrapped i64 value
+    pub const fn inner(&self) -> Inner {
         self.0
     }
 

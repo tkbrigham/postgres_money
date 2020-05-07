@@ -16,7 +16,7 @@ homepage = "https://github.com/tkbrigham/postgres_money"
 name = "postgres_money"
 readme = "README.md"
 repository = "https://github.com/tkbrigham/postgres_money"
-version = "0.1.1"
+version = "0.2.0"
 
 [package.metadata.docs.rs]
 features = ["serde"]
