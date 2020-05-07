@@ -278,8 +278,6 @@ mod tests {
     }
 
     // Money Ops
-
-    // TODO: int parsing
     #[test]
     fn test_valid_123_45_int() {
         assert_eq!(Money::from(12345), Money(12345))
