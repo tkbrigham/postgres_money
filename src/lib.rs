@@ -17,15 +17,50 @@
 //! Visit the docs for [Money](struct.Money.html) for more info.
 
 use std::{fmt, str};
+use std::error::Error as StdErr;
 
 mod error;
 mod parser;
+
+#[cfg(feature = "sql")]
+use postgres_types::{ToSql, FromSql, Type, IsNull};
+
+#[cfg(feature = "sql")]
+use bytes::BytesMut;
+
+#[cfg(feature = "sql")]
+use byteorder::{BigEndian, ByteOrder, ReadBytesExt};
+
+#[cfg(feature = "sql")]
+impl<'a> FromSql<'a> for Money {
+    fn from_sql(_: &Type, mut buf: &[u8]) -> Result<Money, Box<dyn StdErr + Sync + Send>> {
+        let v = buf.read_i64::<BigEndian>()?;
+        if !buf.is_empty() {
+            return Err("invalid buffer size".into());
+        }
+        Ok(Money::from(v))
+    }
+
+    postgres_types::accepts!(MONEY);
+}
+
+#[cfg(feature = "sql")]
+impl ToSql for Money {
+    fn to_sql(&self, _: &Type, w: &mut BytesMut) -> Result<IsNull, Box<dyn StdErr + Sync + Send>> {
+        w.put_i64(self.inner());
+        Ok(IsNull::No)
+    }
+
+    postgres_types::accepts!(MONEY);
+    postgres_types::to_sql_checked!();
+}
 
 use error::Error;
 use std::ops::{Add, Div, Mul, Sub};
 
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
+use bytes::BufMut;
 
 /// Representation of the Postgres 'money' type
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
