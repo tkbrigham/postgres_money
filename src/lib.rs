@@ -1,5 +1,4 @@
 #![doc(html_root_url = "https://docs.rs/postgres_money/0.1")]
-
 // Copyright 2020 Thomas Brigham
 // Licensed under the  MIT license <LICENSE or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
@@ -16,55 +15,19 @@
 //!
 //! Visit the docs for [Money](struct.Money.html) for more info.
 
-use std::{fmt, str};
-use std::error::Error as StdErr;
-
 mod error;
 mod parser;
 
 #[cfg(feature = "sql")]
-use postgres_types::{ToSql, FromSql, Type, IsNull};
-
-#[cfg(feature = "sql")]
-use bytes::BytesMut;
-
-#[cfg(feature = "sql")]
-use byteorder::{BigEndian, ByteOrder, ReadBytesExt};
-
-#[cfg(feature = "sql")]
-impl<'a> FromSql<'a> for Money {
-    fn from_sql(_: &Type, mut buf: &[u8]) -> Result<Money, Box<dyn StdErr + Sync + Send>> {
-        let v = buf.read_i64::<BigEndian>()?;
-        if !buf.is_empty() {
-            return Err("invalid buffer size".into());
-        }
-        Ok(Money::from(v))
-    }
-
-    postgres_types::accepts!(MONEY);
-}
-
-#[cfg(feature = "sql")]
-impl ToSql for Money {
-    fn to_sql(&self, _: &Type, w: &mut BytesMut) -> Result<IsNull, Box<dyn StdErr + Sync + Send>> {
-        w.put_i64(self.inner());
-        Ok(IsNull::No)
-    }
-
-    postgres_types::accepts!(MONEY);
-    postgres_types::to_sql_checked!();
-}
+mod sql_impl;
 
 use error::Error;
 use std::ops::{Add, Div, Mul, Sub};
-
-#[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
-use bytes::BufMut;
+use std::{fmt, str};
 
 /// Representation of the Postgres 'money' type
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Money(Inner);
 type Inner = i64;
 
@@ -529,21 +492,33 @@ mod tests {
     // Precision loss
     #[test]
     fn test_precision_loss_i64() {
-        assert_eq!(Money(9000000000000009900) / 10 as i64, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i64,
+            Money(900000000000000990)
+        )
     }
 
     #[test]
     fn test_precision_loss_i32() {
-        assert_eq!(Money(9000000000000009900) / 10 as i32, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i32,
+            Money(900000000000000990)
+        )
     }
 
     #[test]
     fn test_precision_loss_i16() {
-        assert_eq!(Money(9000000000000009900) / 10 as i16, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i16,
+            Money(900000000000000990)
+        )
     }
 
     #[test]
     fn test_precision_loss_i8() {
-        assert_eq!(Money(9000000000000009900) / 10 as i8, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i8,
+            Money(900000000000000990)
+        )
     }
 }
