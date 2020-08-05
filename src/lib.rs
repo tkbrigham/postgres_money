@@ -1,5 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/postgres_money/0.1")]
-
+#![doc(html_root_url = "https://docs.rs/postgres_money/0.3")]
 // Copyright 2020 Thomas Brigham
 // Licensed under the  MIT license <LICENSE or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
@@ -11,25 +10,24 @@
 //! To activate JSON serialization via the `serde` crate, use syntax like:
 //! ```toml
 //! [dependencies]
-//! postgres_money = { version = "0.1", features = ["serde"] }
+//! postgres_money = { version = "0.3", features = ["serde"] }
 //! ```
 //!
 //! Visit the docs for [Money](struct.Money.html) for more info.
 
-use std::{fmt, str};
-
 mod error;
 mod parser;
 
+#[cfg(feature = "sql")]
+mod sql_impl;
+
 use error::Error;
 use std::ops::{Add, Div, Mul, Sub};
-
-#[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
+use std::{fmt, str};
 
 /// Representation of the Postgres 'money' type
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Money(Inner);
 type Inner = i64;
 
@@ -494,21 +492,33 @@ mod tests {
     // Precision loss
     #[test]
     fn test_precision_loss_i64() {
-        assert_eq!(Money(9000000000000009900) / 10 as i64, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i64,
+            Money(900000000000000990)
+        )
     }
 
     #[test]
     fn test_precision_loss_i32() {
-        assert_eq!(Money(9000000000000009900) / 10 as i32, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i32,
+            Money(900000000000000990)
+        )
     }
 
     #[test]
     fn test_precision_loss_i16() {
-        assert_eq!(Money(9000000000000009900) / 10 as i16, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i16,
+            Money(900000000000000990)
+        )
     }
 
     #[test]
     fn test_precision_loss_i8() {
-        assert_eq!(Money(9000000000000009900) / 10 as i8, Money(900000000000000990))
+        assert_eq!(
+            Money(9000000000000009900) / 10 as i8,
+            Money(900000000000000990)
+        )
     }
 }

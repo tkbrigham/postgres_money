@@ -16,19 +16,34 @@ homepage = "https://github.com/tkbrigham/postgres_money"
 name = "postgres_money"
 readme = "README.md"
 repository = "https://github.com/tkbrigham/postgres_money"
-version = "0.2.0"
 
+version = "0.3.0"  # ALSO UPDATE #![doc(html_root_url)]
 [package.metadata.docs.rs]
-features = ["serde"]
+features = ["serde", "sql"]
 
 [package.metadata.playground]
-features = ["serde"]
+features = ["serde", "sql"]
+
+[features]
+sql = ["postgres-types", "byteorder", "bytes"]
 
 [dependencies.regex]
 version = "1"
 
 [dependencies.serde]
-default-features = false
-features = [ "serde_derive" ]
 optional = true
-version = "1.0.106"
+features = ["serde_derive"]
+version = "1.0"
+
+[dependencies.postgres-types]
+optional = true
+features = ["derive"]
+version = "0.1"
+
+[dependencies.byteorder]
+optional = true
+version = "1.3"
+
+[dependencies.bytes]
+optional = true
+version = "0.5"

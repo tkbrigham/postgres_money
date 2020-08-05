@@ -410,18 +410,12 @@ mod tests {
 
     #[test]
     fn test_valid_12345678901234567_int() {
-        assert_eq!(
-            Money::from(12345678901234567),
-            Money(12345678901234567)
-        )
+        assert_eq!(Money::from(12345678901234567), Money(12345678901234567))
     }
 
     #[test]
     fn test_valid_neg_12345678901234567_int() {
-        assert_eq!(
-            Money::from(-12345678901234567),
-            Money(-12345678901234567)
-        )
+        assert_eq!(Money::from(-12345678901234567), Money(-12345678901234567))
     }
 
     #[test]
