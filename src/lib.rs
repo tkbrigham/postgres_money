@@ -1,5 +1,5 @@
-#![doc(html_root_url = "https://docs.rs/postgres_money/0.3")]
-// Copyright 2020 Thomas Brigham
+#![doc(html_root_url = "https://docs.rs/postgres_money/0.4")]
+// Copyright 2024 Thomas Brigham
 // Licensed under the  MIT license <LICENSE or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
 
@@ -80,7 +80,7 @@ impl Money {
 impl fmt::Debug for Money {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", self)
     }
 }
 
@@ -369,32 +369,32 @@ mod tests {
 
     #[test]
     fn test_money_multiply_f64() {
-        assert_eq!(Money(12300) * 2 as f64, Money(24600))
+        assert_eq!(Money(12300) * 2_f64, Money(24600))
     }
 
     #[test]
     fn test_f64_multiply_money() {
-        assert_eq!(2 as f64 * Money(12300), Money(24600))
+        assert_eq!(2_f64 * Money(12300), Money(24600))
     }
 
     #[test]
     fn test_money_div_f64() {
-        assert_eq!(Money(12300) / 2 as f64, Money(6150))
+        assert_eq!(Money(12300) / 2_f64, Money(6150))
     }
 
     #[test]
     fn test_money_multiply_f32() {
-        assert_eq!(Money(12300) * 2 as f32, Money(24600))
+        assert_eq!(Money(12300) * 2_f32, Money(24600))
     }
 
     #[test]
     fn test_f32_multiply_money() {
-        assert_eq!(2 as f32 * Money(12300), Money(24600))
+        assert_eq!(2_f32 * Money(12300), Money(24600))
     }
 
     #[test]
     fn test_money_div_f32() {
-        assert_eq!(Money(12300) / 2 as f32, Money(6150))
+        assert_eq!(Money(12300) / 2_f32, Money(6150))
     }
 
     // Comparisons
@@ -430,70 +430,70 @@ mod tests {
 
     #[test]
     fn test_eq_inverse() {
-        assert_eq!(Money(12300) == Money(12301), false)
+        assert!(Money(12300) != Money(12301))
     }
 
     #[test]
     fn test_not_eq_inverse() {
-        assert_eq!(Money(12300) != Money(12300), false)
+        assert!(Money(12300) == Money(12300))
     }
 
     #[test]
     fn test_lt_eq_inverse() {
-        assert_eq!(Money(12300) <= Money(12299), false)
+        assert!(Money(12300) > Money(12299))
     }
 
     #[test]
     fn test_gt_eq_inverse() {
-        assert_eq!(Money(12300) >= Money(12301), false)
+        assert!(Money(12300) < Money(12301))
     }
 
     #[test]
     fn test_lt_inverse() {
-        assert_eq!(Money(12300) < Money(12200), false)
+        assert!(Money(12300) >= Money(12200))
     }
 
     #[test]
     fn test_gt_inverse() {
-        assert_eq!(Money(12300) > Money(12400), false)
+        assert!(Money(12300) <= Money(12400))
     }
 
     // Rounding vs. Truncation in Division
     #[test]
     fn test_rounded_division_f64() {
-        assert_eq!(Money(87808) / 11.0 as f64, Money(7983))
+        assert_eq!(Money(87808) / 11.0_f64, Money(7983))
     }
 
     #[test]
     fn test_rounded_division_f32() {
-        assert_eq!(Money(87808) / 11.0 as f32, Money(7983))
+        assert_eq!(Money(87808) / 11.0_f32, Money(7983))
     }
 
     #[test]
     fn test_truncated_division_i64() {
-        assert_eq!(Money(87808) / 11 as i64, Money(7982))
+        assert_eq!(Money(87808) / 11_i64, Money(7982))
     }
 
     #[test]
     fn test_truncated_division_i32() {
-        assert_eq!(Money(87808) / 11 as i32, Money(7982))
+        assert_eq!(Money(87808) / 11_i32, Money(7982))
     }
 
     #[test]
     fn test_truncated_division_i16() {
-        assert_eq!(Money(87808) / 11 as i16, Money(7982))
+        assert_eq!(Money(87808) / 11_i16, Money(7982))
     }
 
     #[test]
     fn test_truncated_division_i8() {
-        assert_eq!(Money(87808) / 11 as i8, Money(7982))
+        assert_eq!(Money(87808) / 11_i8, Money(7982))
     }
 
     // Precision loss
     #[test]
     fn test_precision_loss_i64() {
         assert_eq!(
-            Money(9000000000000009900) / 10 as i64,
+            Money(9000000000000009900) / 10_i64,
             Money(900000000000000990)
         )
     }
@@ -501,7 +501,7 @@ mod tests {
     #[test]
     fn test_precision_loss_i32() {
         assert_eq!(
-            Money(9000000000000009900) / 10 as i32,
+            Money(9000000000000009900) / 10_i32,
             Money(900000000000000990)
         )
     }
@@ -509,7 +509,7 @@ mod tests {
     #[test]
     fn test_precision_loss_i16() {
         assert_eq!(
-            Money(9000000000000009900) / 10 as i16,
+            Money(9000000000000009900) / 10_i16,
             Money(900000000000000990)
         )
     }
@@ -517,7 +517,7 @@ mod tests {
     #[test]
     fn test_precision_loss_i8() {
         assert_eq!(
-            Money(9000000000000009900) / 10 as i8,
+            Money(9000000000000009900) / 10_i8,
             Money(900000000000000990)
         )
     }
