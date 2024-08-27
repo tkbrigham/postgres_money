@@ -1,23 +1,16 @@
 [package]
 authors = ["Thomas Brigham <thomas@thomasbrigham.me>"]
-categories = [
-    "data-structures",
-    "parser-implementations"
-]
+categories = ["data-structures", "parser-implementations"]
 description = "A library to generate and parse Postgres money types."
-edition = "2018"
-keywords = [
-    "money",
-    "currency",
-    "cash"
-]
+edition = "2021"
+keywords = ["money", "currency", "cash"]
 license-file = "LICENSE"
 homepage = "https://github.com/tkbrigham/postgres_money"
 name = "postgres_money"
 readme = "README.md"
 repository = "https://github.com/tkbrigham/postgres_money"
 
-version = "0.3.0"  # ALSO UPDATE #![doc(html_root_url)]
+version = "0.3.0" # ALSO UPDATE #![doc(html_root_url)]
 [package.metadata.docs.rs]
 features = ["serde", "sql"]
 
@@ -28,17 +21,17 @@ features = ["serde", "sql"]
 sql = ["postgres-types", "byteorder", "bytes"]
 
 [dependencies.regex]
-version = "1"
+version = "1.0.0"
 
 [dependencies.serde]
 optional = true
 features = ["serde_derive"]
-version = "1.0"
+version = "1.0.0"
 
 [dependencies.postgres-types]
 optional = true
 features = ["derive"]
-version = "0.1"
+version = "0.2.7"
 
 [dependencies.byteorder]
 optional = true
@@ -46,4 +39,4 @@ version = "1.3"
 
 [dependencies.bytes]
 optional = true
-version = "0.5"
+version = "1.7.1"
