@@ -10,7 +10,7 @@
 //! To activate JSON serialization via the `serde` crate, use syntax like:
 //! ```toml
 //! [dependencies]
-//! postgres_money = { version = "0.3", features = ["serde"] }
+//! postgres_money = { version = "0.4", features = ["serde", "sql"] }
 //! ```
 //!
 //! Visit the docs for [Money](struct.Money.html) for more info.

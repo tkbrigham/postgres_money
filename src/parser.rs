@@ -210,7 +210,7 @@ impl Amount {
 
     fn combine_dollars_and_cents(&self) -> Result<i64, Error> {
         let dollars = mk_int(&self.dollars)? * self.apply_sign();
-        let cents = mk_rounded_cents(self.cents.clone())? * self.apply_sign();
+        let cents = mk_rounded_cents(&self.cents)? * self.apply_sign();
 
         dollars
             .checked_mul(100)
@@ -220,15 +220,15 @@ impl Amount {
     }
 }
 
-fn mk_rounded_cents(s: String) -> Result<i64, Error> {
+fn mk_rounded_cents(s: &str) -> Result<i64, Error> {
     if s.len() > 2 {
         round_cents(s)
     } else {
-        mk_int(&s)
+        mk_int(s)
     }
 }
 
-fn round_cents(s: String) -> Result<i64, Error> {
+fn round_cents(s: &str) -> Result<i64, Error> {
     let s = &s[..3];
     let (s1, s2) = s.split_at(s.len() - 1);
     let (i1, i2) = (mk_int(s1)?, mk_int(s2)?);
