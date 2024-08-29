@@ -153,7 +153,7 @@ impl Amount {
 
         Ok(Amount {
             kind,
-            dollars: Self::mk_string(caps.get(1)).replace(",", ""),
+            dollars: Self::mk_string(caps.get(1)).replace(',', ""),
             cents: Self::mk_string(caps.get(2)),
         })
     }
@@ -201,11 +201,11 @@ impl Amount {
     }
 
     fn apply_sign(&self) -> i64 {
-        return if &self.kind == &AmountKind::Negative {
+        if self.kind == AmountKind::Negative {
             -1
         } else {
             1
-        };
+        }
     }
 
     fn combine_dollars_and_cents(&self) -> Result<i64, Error> {
@@ -220,15 +220,15 @@ impl Amount {
     }
 }
 
-fn mk_rounded_cents(s: &String) -> Result<i64, Error> {
-    return if s.len() > 2 {
+fn mk_rounded_cents(s: &str) -> Result<i64, Error> {
+    if s.len() > 2 {
         round_cents(s)
     } else {
         mk_int(s)
-    };
+    }
 }
 
-fn round_cents(s: &String) -> Result<i64, Error> {
+fn round_cents(s: &str) -> Result<i64, Error> {
     let s = &s[..3];
     let (s1, s2) = s.split_at(s.len() - 1);
     let (i1, i2) = (mk_int(s1)?, mk_int(s2)?);
@@ -244,7 +244,7 @@ fn mk_int(s: &str) -> Result<i64, Error> {
         return Ok(0);
     }
 
-    str::parse::<i64>(&s).map_err(|e| {
+    str::parse::<i64>(s).map_err(|e| {
         // This is a janky workaround until ParseIntError.kind() is stable
         match e.to_string().find("too large") {
             Some(_) => Error::OutOfRange,
