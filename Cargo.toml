@@ -10,7 +10,7 @@ name = "postgres_money"
 readme = "README.md"
 repository = "https://github.com/tkbrigham/postgres_money"
 
-version = "0.4.0" # ALSO UPDATE #![doc(html_root_url)]
+version = "0.4.1" # ALSO UPDATE #![doc(html_root_url)]
 [package.metadata.docs.rs]
 features = ["serde", "sql"]
 
