@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/postgres_money/0.4")]
+#![doc(html_root_url = "https://docs.rs/postgres_money/0.4.1")]
 // Copyright 2024 Thomas Brigham
 // Licensed under the  MIT license <LICENSE or http://opensource.org/licenses/MIT>.
 // This file may not be copied, modified, or distributed except according to those terms.
@@ -10,7 +10,7 @@
 //! To activate JSON serialization via the `serde` crate, use syntax like:
 //! ```toml
 //! [dependencies]
-//! postgres_money = { version = "0.4", features = ["serde", "sql"] }
+//! postgres_money = { version = "0.4.1", features = ["serde", "sql"] }
 //! ```
 //!
 //! Visit the docs for [Money](struct.Money.html) for more info.
